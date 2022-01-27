@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+import argparse, sys, requests
+from main import *
+
+
+if __name__ == '__main__':
+	try:
+		# parse command line arguments into local variables
+		parser = argparse.ArgumentParser(
+			description='This utility will get a submission object from '
+						'a HyperScience REST API server and write it to a '
+						'CSV file.'
+		)
+		parser.add_argument(
+			'-t', '--token',
+			type=str,
+			help='(optional) An token to authenticate with the HyperScience '
+				 'REST API.  Default: "46a2be39a2db8c79013f055bcb273093b587364a"',
+
+			default="46a2be39a2db8c79013f055bcb273093b587364a",
+			required=False,
+			dest='token',
+		)
+		parser.add_argument(
+			'-s', '--server',
+			type=str,
+			help='(optional) A URI of the HyperScience server.  '
+				 'Default: "https://sales1.demo.hyperscience.com"',
+			default=HyperScienceEndpoint.BASE_URL,
+			required=False,
+			dest='server',
+		)
+		parser.add_argument(
+			'submission_id',
+			type=str,
+			help='A submission ID to get and write to the CSV file.',
+ 		)
+		parser.add_argument(
+			'filename',
+			type=str,
+			help='A filename where the CSV file will be saved.',
+		)
+		args = parser.parse_args()
+		HyperScienceEndpoint.BASE_URL = args.server
+
+		# get data from the HyperScience REST API
+		response = HyperScienceAPI.get_data(
+			args.submission_id,
+			'submissions',
+			args.token,
+			params={'flat': False}
+		)
+		# parse the data and write it to the CSV file
+		data = HyperScienceAPI.parse_submission(response.json())
+		write_to_csv(data, args.filename)
+
+	except KeyboardInterrupt:
+		sys.exit(1)
